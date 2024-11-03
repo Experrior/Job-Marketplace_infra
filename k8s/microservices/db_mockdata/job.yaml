@@ -1,0 +1,26 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pi
+spec:
+  template:
+    spec:
+      containers:
+      - name: job_market_db_fill
+        image: job_market_db_fill
+        command: ["sh", "-c"]
+        args:
+          - |
+            # Attempt to connect to database on port 80 (adjust the port as needed)
+            echo "Trying to connect to database..."
+            if curl -s http://postgres-service:5432; then
+              echo "Successfully connected to database";
+            else
+              python3 -m db_mockdata.main -f mockdata.json
+            fi
+      restartPolicy: Never
+      volumeMounts:
+        - name: mockdata
+          mountPath: mockdata.json
+          subPath: mockdata.json
+  backoffLimit: 4

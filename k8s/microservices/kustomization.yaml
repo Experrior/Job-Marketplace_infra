@@ -4,6 +4,9 @@ kind: Kustomization
 resources:
   - database-master
   - database-slaves
-  - graphql
+  # - graphql
+  - chat
+  # - locust-master
+  # - locust-workers
   - ../configmaps
 

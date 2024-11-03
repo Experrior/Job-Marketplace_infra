@@ -5,5 +5,5 @@ metadata:
   name: resource-quota
 spec:
   hard:
-    limits.cpu: 1
-    limits.memory: 1Gi
+    limits.cpu: 6
+    limits.memory: 8Gi
