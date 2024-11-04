@@ -12,34 +12,72 @@ services:
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "admin", "-d", "JobMarketDB"]
       interval: 30s
-      timeout: 10s  
+      timeout: 10s
       retries: 3
     networks:
       - inner_network
 
-  # job_market_backend:
-  #   container_name: job_market_backend
-  #   image: job_market_backend
-  #   ports:
-  #     - "8084:8084"
-  #   healthcheck:
-  #     test: "curl --fail --silent 172.22.0.1:8084/actuator/health | grep UP || echo 'fail'"
-  #     interval: 20s
-  #     timeout: 5s
-  #     retries: 3
+  job_market_notification:
+    container_name: job_market_notification
+    image: job_market_notification
+    ports:
+      - "8082:8082"
+    healthcheck:
+      test: "curl --fail --silent 172.22.0.1:8082/actuator/health | grep UP || echo 'fail'"
+      interval: 20s
+      timeout: 5s
+      retries: 3
+    depends_on:
+      job_market_db:
+        condition: service_healthy
+    environment:
+      DATASOURCE_URL: jdbc:postgresql://172.22.0.1:5432/JobMarketDB
+      DATASOURCE_USERNAME: admin
+      DATASOURCE_PASSWORD: test
+      SPRING_MAIL_USERNAME:
+      SPRING_MAIL_PASSWORD:
+    networks:
+      - inner_network
+
+  job_market_user_service:
+    container_name: job_market_user_service
+    image: job_market_user_service
+    ports:
+      - "8081:8081"
+    healthcheck:
+      test: "curl --fail --silent 172.22.0.1:8081/actuator/health | grep UP || echo 'fail'"
+      interval: 20s
+      timeout: 5s
+      retries: 3
+    depends_on:
+      job_market_db:
+        condition: service_healthy
+    environment:
+      DATASOURCE_URL: jdbc:postgresql://172.22.0.1:5432/JobMarketDB
+      DATASOURCE_USERNAME: admin
+      DATASOURCE_PASSWORD: test
+      JWT_SECRET: jwt_replace
+      JWT_EXPIRATIONS_S: 12000
+      JWT_REFRESH_EXPIRATIONS_S: 12000
+    networks:
+      - inner_network
+
+  # job_market_db_fill:
+  #   container_name: job_market_db_fill
+  #   image: job_market_db_fill
   #   depends_on:
-  #     job_market_db_fill:
-  #       condition: service_completed_successfully
-  #   environment:
-  #     DATASOURCE_URL: jdbc:postgresql://172.22.0.1:5432/JobMarketDB
-  #     DATASOURCE_USERNAME: admin
-  #     DATASOURCE_PASSWORD: test
+  #     job_market_db:
+  #       condition: service_healthy
   #   networks:
   #     - inner_network
 
-  job_market_db_fill:
-    container_name: job_market_db_fill
-    image: job_market_db_fill
+  job_market_gateway:
+    container_name: job_market_gateway
+    image: job_market_gateway
+    ports:
+      - "8080:8080"
+    environment:
+      JWT_SECRET: jwt_replace
     depends_on:
       job_market_db:
         condition: service_healthy
@@ -57,6 +95,15 @@ services:
     networks:
       - inner_network
 
+
+  rabbitmq:
+      image: rabbitmq:3.12-management
+      container_name: rabbitmq
+      ports:
+        - "5672:5672"
+        - "15672:15672"
+      networks:
+        - inner_network
 
 networks:
   inner_network:
