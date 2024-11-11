@@ -12,6 +12,7 @@ rebuild=false
 profile="zpi"
 pkl=false
 run_linter=false
+quiet=false
 
 # Set env variables
 INFRA_FOLDER='.'
@@ -32,6 +33,7 @@ while [[ "$#" -gt 0 ]]; do
 		--k8s_full) k8s_full=true ;;
 		--lint) run_linter=true ;;
 		--pkl) pkl=true ;;
+		--quiet) quiet=true ;;
         *) echo "Unknown option: $1" ;;
     esac
     shift
@@ -115,9 +117,12 @@ if $k8s || $k8s_full; then
 	minikube dashboard -p="${profile}"
 
 else
-	# Run compose
+
+	./scripts/generate_jwt.sh
 	docker compose -f ${INFRA_FOLDER}/compose.yaml up -d --force-recreate
-	watch -n 1 docker compose -f ${INFRA_FOLDER}/compose.yaml ps
+	if ! $quiet; then
+			watch -n 1 docker compose -f ${INFRA_FOLDER}/compose.yaml ps
+	fi
 
 fi
 
