@@ -151,14 +151,14 @@ else
 		docker compose up -d job_market_chat
 	elif $rebuild; then
 		rebuild
-	else
-		./scripts/generate_jwt.sh
-		docker compose -f ${INFRA_FOLDER}/compose.yaml up -d --force-recreate
-		if ! $quiet; then
-				watch -n 1 docker compose -f ${INFRA_FOLDER}/compose.yaml ps
-		fi
-
 	fi
+	
+	./scripts/generate_jwt.sh
+	docker compose -f ${INFRA_FOLDER}/compose.yaml up -d --force-recreate
+	if ! $quiet; then
+			watch -n 1 docker compose -f ${INFRA_FOLDER}/compose.yaml ps
+	fi
+
 fi
 
 set +ex
