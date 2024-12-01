@@ -57,7 +57,7 @@ services:
       DATASOURCE_URL: jdbc:postgresql://172.22.0.1:5432/JobMarketDB
       DATASOURCE_USERNAME: admin
       DATASOURCE_PASSWORD: test
-      JWT_SECRET: QlAiLZ2V3akWisAaaLmVuxdvRmObAbevfd3J0QwFjakpOtfetiEo0ymNmmTYVFl9KHJxqcSBiKid7lsd0AP4dSxo5x8Y7DKOphTB4VNj1b1GGTP6n09rpXghnX8bZ7sS
+      JWT_SECRET: rjiFikUAFvIeaxaRmSy159sRrgezgBMN1S7F3Z1KmTnH8hRK1dfXdnFRbSopwhIbelOKZMYzqTtyauxgklXwALbVhZMoxwYLUlu4r8uWQhBT1sWxenJA1A8qs3CXU181
       JWT_EXPIRATIONS_S: 12000
       JWT_REFRESH_EXPIRATIONS_S: 12000
 
@@ -66,7 +66,7 @@ services:
 
   job_market_db_fill:
     container_name: job_market_db_fill
-    image: job_market_db_fill
+    image: job_market_db_fill:latest
     depends_on:
       job_market_db:
         condition: service_healthy
@@ -79,7 +79,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      JWT_SECRET: QlAiLZ2V3akWisAaaLmVuxdvRmObAbevfd3J0QwFjakpOtfetiEo0ymNmmTYVFl9KHJxqcSBiKid7lsd0AP4dSxo5x8Y7DKOphTB4VNj1b1GGTP6n09rpXghnX8bZ7sS
+      JWT_SECRET: rjiFikUAFvIeaxaRmSy159sRrgezgBMN1S7F3Z1KmTnH8hRK1dfXdnFRbSopwhIbelOKZMYzqTtyauxgklXwALbVhZMoxwYLUlu4r8uWQhBT1sWxenJA1A8qs3CXU181
     depends_on:
       job_market_db:
         condition: service_healthy

@@ -41,7 +41,7 @@ if ! $soft_rebuild; then
 	echo "--- Docker compose down ---"
 	docker compose -f ${INFRA_FOLDER}/compose.yaml down --remove-orphans
 	docker compose rm -f
-	docker rm -fv job_market_db_local
+	# docker rm -fv job_market_db_local
 fi 
 
 
@@ -149,6 +149,8 @@ else
 		docker compose up -d job_market_job_service
 		docker compose up -d job_market_notification
 		docker compose up -d job_market_chat
+	elif $rebuild; then
+		rebuild
 	else
 		./scripts/generate_jwt.sh
 		docker compose -f ${INFRA_FOLDER}/compose.yaml up -d --force-recreate
