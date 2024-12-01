@@ -52,6 +52,7 @@ services:
     depends_on:
       job_market_db_fill:
         condition: service_completed_successfully
+    env_file: .env
     environment:
       DATASOURCE_URL: jdbc:postgresql://172.22.0.1:5432/JobMarketDB
       DATASOURCE_USERNAME: admin
@@ -59,10 +60,6 @@ services:
       JWT_SECRET: QlAiLZ2V3akWisAaaLmVuxdvRmObAbevfd3J0QwFjakpOtfetiEo0ymNmmTYVFl9KHJxqcSBiKid7lsd0AP4dSxo5x8Y7DKOphTB4VNj1b1GGTP6n09rpXghnX8bZ7sS
       JWT_EXPIRATIONS_S: 12000
       JWT_REFRESH_EXPIRATIONS_S: 12000
-      AWS_S3_BUCKET: jobsearch-file-storage-kjnhbgvfcdrxesdrftrtghjkhbgtvfrdeswrdtfg
-      AWS_ACCESS_KEY: ASIA5VWKPPNUSZYNH62G
-      AWS_SECRET_KEY: QUARA+9Tt8Tk0NW0wSHAAKQ7YBN79wxU5U2Ti2Ki
-      AWS_SESSION_TOKEN: IQoJb3JpZ2luX2VjEGoaCXVzLXdlc3QtMiJIMEYCIQD0uMQPA2i8HlTILBApl7znHbVDhl7a3e2DzMjR4nqK6AIhALBmGiGkcmMkPwomUhIEY+v99tip0TpRSdNC8uBfHC6OKqkCCBMQAhoMOTM5OTQ4NzM1MzM3IgzpPE/yx/M8xv1L5wcqhgLqsqXFHwpG+OB3DZGWuQNK8/G4ZxPwTOOVkOsMLW+1W/6H1NBoRf7r5eeNjKw7V5lmCggnWzCZrip108v1BaPRRmtDFqDGIdDENnfrP7VuFT2AQ6NYI4rXplHnzWfUybUTJzOnvPnmdRABJCRg3ZEoLAwd0tp6wlzjmSt8EEqoROJLCCB4KqPr36RHRlstVe8OEv6OPNaPkEMHumSjBUzZrohUuMi9QDC7XpxKTPI3xbdAaj26Ypc2glKCxN7aZCQ8qRPgWcYztESkCwvg3ApRsl7EEgV8C7W7z/y0wfiG0NUxNxw+grUoh1xVsgWjMCtOPuld86/iG2amVeIUTGUy1emhUuHJMOOHkboGOpwBLwoMjB5hP3Cp/A+EiCNrOhQIbAnAZRcrMzMyUCPIw3kV2K0QckrY8eEsnCiRtGvDQ9pKgDBKgyuPuh3CaVEmALeOyERo7stemo/znaaNHSmPWU8cciVdM5HFrKMUDCStJA8MUE5y05Jhox+aBTURdarG+OOlCTuY99agKAGcQsnR4QDze2Jm20SOaK5JQv6N8exfVVVqjnBm0UZ4
 
     networks:
       - inner_network
@@ -105,15 +102,12 @@ services:
   job_market_job_service:
     container_name: job_market_job_service
     image: job_market_job_service
+    env_file: .env
     environment:
       DATASOURCE_URL: jdbc:postgresql://172.22.0.1:5432/JobMarketDB
       DATASOURCE_USERNAME: admin
       DATASOURCE_PASSWORD: test
       USER_SERVICE_URL: http://172.22.0.1:8081
-      AWS_S3_BUCKET: jobsearch-file-storage-kjnhbgvfcdrxesdrftrtghjkhbgtvfrdeswrdtfg
-      AWS_ACCESS_KEY: ASIA5VWKPPNUSZYNH62G
-      AWS_SECRET_KEY: QUARA+9Tt8Tk0NW0wSHAAKQ7YBN79wxU5U2Ti2Ki
-      AWS_SESSION_TOKEN: IQoJb3JpZ2luX2VjEGoaCXVzLXdlc3QtMiJIMEYCIQD0uMQPA2i8HlTILBApl7znHbVDhl7a3e2DzMjR4nqK6AIhALBmGiGkcmMkPwomUhIEY+v99tip0TpRSdNC8uBfHC6OKqkCCBMQAhoMOTM5OTQ4NzM1MzM3IgzpPE/yx/M8xv1L5wcqhgLqsqXFHwpG+OB3DZGWuQNK8/G4ZxPwTOOVkOsMLW+1W/6H1NBoRf7r5eeNjKw7V5lmCggnWzCZrip108v1BaPRRmtDFqDGIdDENnfrP7VuFT2AQ6NYI4rXplHnzWfUybUTJzOnvPnmdRABJCRg3ZEoLAwd0tp6wlzjmSt8EEqoROJLCCB4KqPr36RHRlstVe8OEv6OPNaPkEMHumSjBUzZrohUuMi9QDC7XpxKTPI3xbdAaj26Ypc2glKCxN7aZCQ8qRPgWcYztESkCwvg3ApRsl7EEgV8C7W7z/y0wfiG0NUxNxw+grUoh1xVsgWjMCtOPuld86/iG2amVeIUTGUy1emhUuHJMOOHkboGOpwBLwoMjB5hP3Cp/A+EiCNrOhQIbAnAZRcrMzMyUCPIw3kV2K0QckrY8eEsnCiRtGvDQ9pKgDBKgyuPuh3CaVEmALeOyERo7stemo/znaaNHSmPWU8cciVdM5HFrKMUDCStJA8MUE5y05Jhox+aBTURdarG+OOlCTuY99agKAGcQsnR4QDze2Jm20SOaK5JQv6N8exfVVVqjnBm0UZ4
     depends_on: 
       job_market_db_fill:
         condition: service_completed_successfully
