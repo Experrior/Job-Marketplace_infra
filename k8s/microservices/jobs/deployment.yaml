@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: job-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: job
+  template:
+    metadata:
+      labels:
+        app: job
+    spec:
+      containers:
+        - name: job-container
+          image: job_market_job_service:latest
+          ports:
+            - containerPort: 8083
+              hostPort: 8083
+          env:
+            - name: JAVA_OPTS
+              value: "-Xms512m -Xmx1024m"
+            - name: DATASOURCE_URL
+              value: jdbc:postgresql://172.22.0.2:5432/JobMarketDB
+            - name: DATASOURCE_USERNAME
+              value: admin
+            - name: DATASOURCE_PASSWORD
+              value: test
+            - name: USER_SERVICE_URL
+              value: http://172.22.0.1:8081
+            - name: AWS_S3_BUCKET
+              value: jobsearch-file-storage-kjnhbgvfcdrxesdrftrtghjkhbgtvfrdeswrdtfg
+            - name: AWS_ACCESS_KEY
+              value: ASIA5VWKPPNU4ZTTSMTP
+            - name: AWS_SECRET_KEY
+              value: JuSo7ZoRd0Y3IRC7ySzK0xu/QN/Dtf4d9HECA1VQ
+            - name: AWS_SESSION_TOKEN
+              value: IQoJb3JpZ2luX2VjEOn//////////wEaCXVzLXdlc3QtMiJGMEQCIGiLit6SXS/eKFDGXcM3PdGSXofQi8IRR8Ct7AcNjpEgAiAQYSB6ne/EyOmIlyl2aq+f08IlcSEECBXVrJ3zniIfqCqyAgiS//////////8BEAIaDDkzOTk0ODczNTMzNyIMPet2Wprhey+khXPtKoYCZJzESge0qszJhJmmu9hlLhC8LLUDKDo0UPkOXdgbZNgsm8uT16dd36H/y8dnA68NzwfZDhqa4MDHByL9ANVlpkCwB4J7SAh+XCBkIjUTWkGnGrGJTtHf0tQC9C+24WCWLgJc9bQsw3PpxoyN055Et6S55aXBOZ2vXN1CIgTnw5M73gU3o9TK3fns1tDQ/xSlkQ01lJtFcSYo2FgEJsfbboOFLDSyleKsJW5TsqwgpRvVI+DNUW0qGxPAvRcNXCFD/AkV1FJsDT3R7sfYr8qLKNt3iQ2AWZ1n8nBG4TyNUYZ87eEEEB2ZqcTqkS5W6j2rfqIkyL3JQybsK/wYFiXEpBhxBwu5hjDJ+ay6BjqeATjRMAg2jut0aAtt5M6fiZrzpu1by02mYuXJ1dX0uCKTv/fbS7BMFzgPcHAR7r1dRyncJxyasBJwWYYxl8MN6OF6aoP0tZgv+qWF8JyitH8GD0W1VmbI9bvQr4jESqcRWxuV0oAyu0g5Im86c2+iYcXyhXwlHhV0PnmtXoasLJmi1nW0dhQ1fZDMh2Fe0OeISJQCK1zw09U4SLQPlewq
+
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"  
+          imagePullPolicy: IfNotPresent
+

@@ -9,6 +9,7 @@
 k8s=false
 k8s_full=false
 rebuild=false
+soft_rebuild=false
 profile="zpi"
 pkl=false
 run_linter=false
@@ -18,11 +19,6 @@ quiet=false
 INFRA_FOLDER='.'
 BACKEND_FOLDER='../Job-Marketplace_backend'
 set -ex
-
-# Cleanup
-docker compose -f ${INFRA_FOLDER}/compose.yaml down --remove-orphans
-docker compose rm -f
-docker rm -fv job_market_db_local
 
 # Parse command-line arguments
 while [[ "$#" -gt 0 ]]; do
@@ -34,11 +30,22 @@ while [[ "$#" -gt 0 ]]; do
 		--lint) run_linter=true ;;
 		--pkl) pkl=true ;;
 		--quiet) quiet=true ;;
+		--soft-rebuild) soft_rebuild=true  ;;
         *) echo "Unknown option: $1" ;;
     esac
     shift
 done
 
+# Cleanup
+if ! $soft_rebuild; then
+	echo "--- Docker compose down ---"
+	docker compose -f ${INFRA_FOLDER}/compose.yaml down --remove-orphans
+	docker compose rm -f
+	docker rm -fv job_market_db_local
+fi 
+
+
+echo $soft_rebuild "succesus"
 
 run_linter() {
 	kube-linter lint $(find -path '*database-slaves/*.yaml')
@@ -46,17 +53,21 @@ run_linter() {
 
 load_images() {
 	# load images if not present
-	if ! ( minikube image ls -p="${profile}" | grep -q 'job_market_backend' ); then
-		minikube image load job_market_backend:latest -p="${profile}"
-	fi
+	# if ! ( minikube image ls -p="${profile}" | grep -q 'job_market_user_service' ); then
+		minikube image load job_market_user_service:latest -p="${profile}"
+	# fi
 
-	if ! ( minikube image ls -p="${profile}" | grep -q 'job_market_database' ); then
+	# if ! ( minikube image ls -p="${profile}" | grep -q 'job_market_database' ); then
 		minikube image load job_market_database:latest -p="${profile}"
-	fi
+	# fi
 
-	if ! ( minikube image ls -p="${profile}" | grep -q 'job_market_db_fill' ); then
+	# if ! ( minikube image ls -minikube startp="${profile}" | grep -q 'job_market_db_fill' ); then
 		minikube image load job_market_db_fill:latest -p="${profile}"
-	fi
+	# fi
+
+	# if ! ( minikube image ls -p="${profile}" | grep -q 'job_market_job_service' ); then
+		minikube image load job_market_job_service:latest -p="${profile}"
+	# fi
 
 	# if ! ( minikube image ls -p="${profile}" | grep -q 'job_market_chat' ); then
 	# minikube image rm job_market_chat:latest -p="${profile}"
@@ -74,20 +85,28 @@ if $pkl; then
 	pkl eval -p input=${INFRA_FOLDER}/k8s/volumes/pv_config.pkl -o ${INFRA_FOLDER}/k8s/volumes/pv_generated.yaml || echo "--- [WARNING] pkl generation has failed ---"
 fi
 
+rebuild() {
+	if $rebuild || $soft_rebuild; then
 
-if $rebuild; then
-	build_dir=$(pwd)
-	cd ${BACKEND_FOLDER}/services
-	echo $build_dir
-	echo $(pwd)
-    docker build -f db/Dockerfile . -t docker.local:5000/job_market_database -t job_market_database
-	docker build -f user-service/Dockerfile . -t job_market_user_service
-	docker build -f api-gateway/Dockerfile . -t job_market_gateway
-	docker build -f notification-service/Dockerfile . -t job_market_notification
-	docker build -f db_mockup/Dockerfile . -t docker.local:5000/job_market_db_fill -t job_market_db_fill
-	docker build -f chat_go/Dockerfile . -t docker.local:5000/job_market_chat -t job_market_chat
-	cd $build_dir
-fi
+		# if $k8s || $k8s_full;then
+		# 	eval $(minikube -p="${profile}" docker-env --shell=bash)
+		# fi
+		build_dir=$(pwd)
+		cd ${BACKEND_FOLDER}/services
+		echo $build_dir
+		echo $(pwd)
+		docker build -f db/Dockerfile . -t docker.local:5000/job_market_database -t job_market_database
+		docker build -f user-service/Dockerfile . -t job_market_user_service
+		docker build -f api-gateway/Dockerfile . -t job_market_gateway
+		docker build -f notification-service/Dockerfile . -t job_market_notification
+		docker build -f db_mockup/Dockerfile . -t docker.local:5000/job_market_db_fill -t job_market_db_fill
+		docker build -f chat_go/Dockerfile . -t docker.local:5000/job_market_chat -t job_market_chat
+		docker build -f job-service/Dockerfile . -t docker.local:5000/job_market_job_service -t job_market_job_service
+		cd $build_dir
+	fi
+}
+
+
 
 
 if $k8s || $k8s_full; then
@@ -99,10 +118,11 @@ if $k8s || $k8s_full; then
 	minikube start -p="${profile}" --driver=docker --cpus 6 --memory 10000 --static-ip 192.168.10.10
 	sleep 10s
 
-
+	rebuild
 
 	load_images
 
+	kubectl delete --force -k ${INFRA_FOLDER}/k8s/clusters/"${profile}"/ || echo "--- [WARNING] Couldn't delete everything ---"
 	kubectl apply -k ${INFRA_FOLDER}/k8s/clusters/"${profile}"/
 
 		# minikube -p=${profile} tunnel --cleanup=true & echo 'Added minikube tunnel'
@@ -113,17 +133,30 @@ if $k8s || $k8s_full; then
 
 	# restart deplyoments to allow for configmaps update
 	kubectl rollout restart deployment
-
+	echo "--- TO CONNECT RUN: 'minikube tunnel -p=zpi' ---"
 	minikube dashboard -p="${profile}"
 
+	
+
 else
+	if $soft_rebuild; then
+		docker rm -f job_market_user_service
+		docker rm -f job_market_job_service
+		docker rm -f job_market_notification
+		docker rm -f job_market_chat
 
-	./scripts/generate_jwt.sh
-	docker compose -f ${INFRA_FOLDER}/compose.yaml up -d --force-recreate
-	if ! $quiet; then
-			watch -n 1 docker compose -f ${INFRA_FOLDER}/compose.yaml ps
+		docker compose up -d job_market_user_service
+		docker compose up -d job_market_job_service
+		docker compose up -d job_market_notification
+		docker compose up -d job_market_chat
+	else
+		./scripts/generate_jwt.sh
+		docker compose -f ${INFRA_FOLDER}/compose.yaml up -d --force-recreate
+		if ! $quiet; then
+				watch -n 1 docker compose -f ${INFRA_FOLDER}/compose.yaml ps
+		fi
+
 	fi
-
 fi
 
 set +ex
