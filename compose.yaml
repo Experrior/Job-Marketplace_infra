@@ -1,21 +1,87 @@
 services:
-  job_market_db:
-    container_name: job_market_database
+  # job_market_db:
+  #   container_name: job_market_database
+  #   image: job_market_database
+  #   ports:
+  #     - "5432:5432"
+  #   environment:
+  #     POSTGRES_DB: JobMarketDB
+  #     POSTGRES_USER: admin
+  #     POSTGRES_PASSWORD: test
+
+  #   healthcheck:
+  #     test: ["CMD", "pg_isready", "-U", "admin", "-d", "JobMarketDB"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #   networks:
+  #     - inner_network
+
+  job_market_db_master:
     image: job_market_database
+    container_name: job_market_db_master
+    restart: always
     ports:
-      - "5432:5432"
+      - 5432:5432
     environment:
       POSTGRES_DB: JobMarketDB
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: test
-
+      POSTGRES_HOST_AUTH_METHOD: "scram-sha-256\nhost all all 0.0.0.0/0 md5"
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
+    command:
+      - "postgres"
+      - "-c"
+      - "config_file=/tmp/postgresql.conf"
+      - "-c"
+      - "hba_file=/etc/pg_hba.conf"
+    volumes:
+      - ./master-postgresql.conf:/tmp/postgresql.conf
+      - ./pg_hba.conf:/etc/pg_hba.conf
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "admin", "-d", "JobMarketDB"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+     test: 'pg_isready -U admin --dbname=JobMarketDB'
+     interval: 10s
+     timeout: 5s
+     retries: 5
     networks:
-      - inner_network
+     - network-postgres-test1
+
+
+
+  job_market_db_replica:
+    image: job_market_database
+    container_name: job_market_db_replica
+    ports:
+      - 5434:5432
+    environment:
+      PGUSER: replicator
+      PGPASSWORD: replicator_password
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: test
+    command: |
+      bash -c "
+      pwd
+      until pg_basebackup --pgdata=/var/lib/postgresql/data -R --slot=replication_slot --host=172.24.0.1 --port=5432
+      do
+      echo 'Waiting for primary to connect...'
+      sleep 5s
+      done
+      echo 'Backup done, starting replica...'
+      chmod 0700 /var/lib/postgresql/data
+      docker-entrypoint.sh -c config_file=/etc/postgresql/postgresql.conf
+      "
+    depends_on:
+      - job_market_db_master
+    volumes:
+      - ./postgresql.conf:/etc/postgresql/postgresql.conf
+      - ./pg_hba.conf:/etc/pg_hba.conf
+    healthcheck:
+     test: 'pg_isready -U admin --dbname=JobMarketDB'
+     interval: 10s
+     timeout: 5s
+     retries: 5
+    networks:
+     - network-postgres-test1
 
   job_market_notification:
     container_name: job_market_notification
@@ -57,7 +123,7 @@ services:
       DATASOURCE_URL: jdbc:postgresql://172.22.0.1:5432/JobMarketDB
       DATASOURCE_USERNAME: admin
       DATASOURCE_PASSWORD: test
-      JWT_SECRET: 3aljLRNStN46QM08FbTp2TYstRUuVfzFz86JtQPx6HrF5SY7OxUjyxA0nff46R0x9jP2U9DWFtJ2s9CNyc70lGVv6eu1AJUODy6haBcJYGMCvSFPEDDfcsbXwGUkUIuS
+      JWT_SECRET: Fq3b1zVuRCrxOvzIrMp9lGhisD1bCuVuQ6hmudzNnTP1oNnaoe9NBws1Yv70k4tvhrviXs9R9oNyXBB79D1KgEjZIE8zNqJxf4QYHEKAMhsve4KlUtTQt4pCmWuBN1X1
       JWT_EXPIRATIONS_S: 12000
       JWT_REFRESH_EXPIRATIONS_S: 12000
 
@@ -79,7 +145,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      JWT_SECRET: 3aljLRNStN46QM08FbTp2TYstRUuVfzFz86JtQPx6HrF5SY7OxUjyxA0nff46R0x9jP2U9DWFtJ2s9CNyc70lGVv6eu1AJUODy6haBcJYGMCvSFPEDDfcsbXwGUkUIuS
+      JWT_SECRET: Fq3b1zVuRCrxOvzIrMp9lGhisD1bCuVuQ6hmudzNnTP1oNnaoe9NBws1Yv70k4tvhrviXs9R9oNyXBB79D1KgEjZIE8zNqJxf4QYHEKAMhsve4KlUtTQt4pCmWuBN1X1
     depends_on:
       job_market_db:
         condition: service_healthy
