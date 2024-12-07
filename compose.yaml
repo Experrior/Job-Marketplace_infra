@@ -44,7 +44,7 @@ services:
      timeout: 5s
      retries: 5
     networks:
-     - network-postgres-test1
+     - inner_network
 
 
 
@@ -81,7 +81,7 @@ services:
      timeout: 5s
      retries: 5
     networks:
-     - network-postgres-test1
+     - inner_network
 
   job_market_notification:
     container_name: job_market_notification
@@ -123,7 +123,7 @@ services:
       DATASOURCE_URL: jdbc:postgresql://172.22.0.1:5432/JobMarketDB
       DATASOURCE_USERNAME: admin
       DATASOURCE_PASSWORD: test
-      JWT_SECRET: Fq3b1zVuRCrxOvzIrMp9lGhisD1bCuVuQ6hmudzNnTP1oNnaoe9NBws1Yv70k4tvhrviXs9R9oNyXBB79D1KgEjZIE8zNqJxf4QYHEKAMhsve4KlUtTQt4pCmWuBN1X1
+      JWT_SECRET: UMafFNaee7DY6eBOvV4GoqOJiLkgmLlreG9Qlgww8OvwBBqEUjBPV6pK6Mj758xyFWT5Vw36aUmO4X81ugqFlkuSAR9TAp9C3SCUbRnRd74p4RFP7sliQLCyiM613Sga
       JWT_EXPIRATIONS_S: 12000
       JWT_REFRESH_EXPIRATIONS_S: 12000
 
@@ -134,7 +134,7 @@ services:
     container_name: job_market_db_fill
     image: job_market_db_fill:latest
     depends_on:
-      job_market_db:
+      job_market_db_master:
         condition: service_healthy
     networks:
       - inner_network
@@ -145,10 +145,10 @@ services:
     ports:
       - "8080:8080"
     environment:
-      JWT_SECRET: Fq3b1zVuRCrxOvzIrMp9lGhisD1bCuVuQ6hmudzNnTP1oNnaoe9NBws1Yv70k4tvhrviXs9R9oNyXBB79D1KgEjZIE8zNqJxf4QYHEKAMhsve4KlUtTQt4pCmWuBN1X1
-    depends_on:
-      job_market_db:
-        condition: service_healthy
+      JWT_SECRET: UMafFNaee7DY6eBOvV4GoqOJiLkgmLlreG9Qlgww8OvwBBqEUjBPV6pK6Mj758xyFWT5Vw36aUmO4X81ugqFlkuSAR9TAp9C3SCUbRnRd74p4RFP7sliQLCyiM613Sga
+    # depends_on:
+    #   job_market_db:
+    #     condition: service_healthy
     networks:
       - inner_network
 
@@ -170,9 +170,6 @@ services:
     image: job_market_job_service
     env_file: .env
     environment:
-      DATASOURCE_URL: jdbc:postgresql://172.22.0.1:5432/JobMarketDB
-      DATASOURCE_USERNAME: admin
-      DATASOURCE_PASSWORD: test
       USER_SERVICE_URL: http://172.22.0.1:8081
     depends_on: 
       job_market_db_fill:
@@ -180,6 +177,26 @@ services:
     ports:
     - "8083:8083"
 
+  job_market_analytics:
+    container_name: job_market_analytics
+    image: job_market_analytics
+    env_file: .env
+    environment:
+      USER_SERVICE_URL: http://172.22.0.1:8081
+    depends_on: 
+      job_market_db_fill:
+        condition: service_completed_successfully
+    ports:
+    - "8089:80"
+
+
+  job_market_front:
+    container_name: job_market_front
+    image: job_market_front
+    volumes:
+      - .front_env:/app/.env.production:ro
+    ports:
+    - "80:3000"
     networks:
       - inner_network
 

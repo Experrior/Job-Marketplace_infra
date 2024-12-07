@@ -18,6 +18,7 @@ quiet=false
 # Set env variables
 INFRA_FOLDER='.'
 BACKEND_FOLDER='../Job-Marketplace_backend'
+FRONTEND_FOLDER='../Job-Marketplace_frontend'
 set -ex
 
 # Parse command-line arguments
@@ -97,11 +98,15 @@ rebuild() {
 		echo $(pwd)
 		docker build -f db/Dockerfile . -t docker.local:5000/job_market_database -t job_market_database
 		docker build -f user-service/Dockerfile . -t job_market_user_service
+		# docker build -f analytics/Dockerfile . -t job_market_analytics
 		docker build -f api-gateway/Dockerfile . -t job_market_gateway
 		docker build -f notification-service/Dockerfile . -t job_market_notification
 		docker build -f db_mockup/Dockerfile . -t docker.local:5000/job_market_db_fill -t job_market_db_fill
 		docker build -f chat_go/Dockerfile . -t docker.local:5000/job_market_chat -t job_market_chat
 		docker build -f job-service/Dockerfile . -t docker.local:5000/job_market_job_service -t job_market_job_service
+		cd $build_dir
+		cd ${FRONTEND_FOLDER}
+		docker build . -t job_market_front
 		cd $build_dir
 	fi
 }
@@ -151,9 +156,10 @@ else
 		docker compose up -d job_market_chat
 	elif $rebuild; then
 		rebuild
+		./scripts/generate_jwt.sh
 	fi
 	
-	./scripts/generate_jwt.sh
+	
 	docker compose -f ${INFRA_FOLDER}/compose.yaml up -d --force-recreate
 	if ! $quiet; then
 			watch -n 1 docker compose -f ${INFRA_FOLDER}/compose.yaml ps
