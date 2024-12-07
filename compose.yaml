@@ -123,7 +123,7 @@ services:
       DATASOURCE_URL: jdbc:postgresql://172.22.0.1:5432/JobMarketDB
       DATASOURCE_USERNAME: admin
       DATASOURCE_PASSWORD: test
-      JWT_SECRET: UMafFNaee7DY6eBOvV4GoqOJiLkgmLlreG9Qlgww8OvwBBqEUjBPV6pK6Mj758xyFWT5Vw36aUmO4X81ugqFlkuSAR9TAp9C3SCUbRnRd74p4RFP7sliQLCyiM613Sga
+      JWT_SECRET: q57kniynWuRaC2be8db7nmSMUjKpOZSazrmVAgqOBvUzbXKy6nHJZA1hF0SxbE4WAszB6ASP5dSc4g0eborbW7y2XSZb1Fks9FmCeLxf5KTdLQ487sSDbK4pIy8KW1AZ
       JWT_EXPIRATIONS_S: 12000
       JWT_REFRESH_EXPIRATIONS_S: 12000
 
@@ -145,7 +145,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      JWT_SECRET: UMafFNaee7DY6eBOvV4GoqOJiLkgmLlreG9Qlgww8OvwBBqEUjBPV6pK6Mj758xyFWT5Vw36aUmO4X81ugqFlkuSAR9TAp9C3SCUbRnRd74p4RFP7sliQLCyiM613Sga
+      JWT_SECRET: q57kniynWuRaC2be8db7nmSMUjKpOZSazrmVAgqOBvUzbXKy6nHJZA1hF0SxbE4WAszB6ASP5dSc4g0eborbW7y2XSZb1Fks9FmCeLxf5KTdLQ487sSDbK4pIy8KW1AZ
     # depends_on:
     #   job_market_db:
     #     condition: service_healthy
@@ -193,8 +193,6 @@ services:
   job_market_front:
     container_name: job_market_front
     image: job_market_front
-    volumes:
-      - .front_env:/app/.env.production:ro
     ports:
     - "80:3000"
     networks:
