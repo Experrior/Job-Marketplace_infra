@@ -1,0 +1,246 @@
+services:
+
+  traefik:
+    image: traefik:v2.9
+    container_name: traefik
+    restart: always
+    command:
+      - "--api.insecure=false" # Disable insecure API
+      - "--providers.docker=true"
+      - "--providers.docker.network=inner_network"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      - "--certificatesresolvers.myresolver.acme.email=259905@student.pwr.edu.pl" # Replace with your email
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+      - "--log.level=DEBUG"
+    ports:
+      - "80:80"
+      - "443:443"
+      # Optional: Enable Traefik dashboard (secured)
+      # - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/letsencrypt:/letsencrypt
+    networks:
+      - inner_network
+    labels:
+      - "traefik.enable=true"
+      # Optional: Enable Traefik dashboard (secured)
+#      - "traefik.http.routers.traefik.rule=Host(`zpi.jobistry.org`)" # Replace with your desired domain
+#      - "traefik.http.routers.traefik.entrypoints=websecure"
+#      - "traefik.http.routers.traefik.tls.certresolver=myresolver"
+#      - "traefik.http.routers.traefik.service=api@internal"
+        #- "traefik.http.routers.traefik.middlewares=auth"
+      # Define authentication middleware (basic auth)
+      # - "traefik.http.middlewares.auth.basicauth.users=admin:$$apr1$$H6uskkkW$$IgXLP6ewTrSuBkTrqE8wj/" # Replace with your own credentials
+
+  job_market_db_master:
+    image: job_market_database_master
+    container_name: job_market_db_master
+    restart: always
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_DB: JobMarketDB
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: test
+      POSTGRES_HOST_AUTH_METHOD: "scram-sha-256\nhost all all 0.0.0.0/0 md5"
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
+    command:
+      - "postgres"
+      - "-c"
+      - "config_file=/tmp/postgresql.conf"
+      - "-c"
+      - "hba_file=/etc/pg_hba.conf"
+    volumes:
+      - ./master-postgresql.conf:/tmp/postgresql.conf
+      - ./pg_hba.conf:/etc/pg_hba.conf
+    healthcheck:
+      test: 'pg_isready -U admin --dbname=JobMarketDB'
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - inner_network
+
+  job_market_db_replica:
+    image: job_market_database
+    container_name: job_market_db_replica
+    ports:
+      - 5434:5432
+    environment:
+      PGUSER: replicator
+      PGPASSWORD: replicator_password
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: test
+    command: |
+      bash -c "
+      pwd
+      until pg_basebackup --pgdata=/var/lib/postgresql/data -R --slot=replication_slot --host=172.22.0.1 --port=5432
+      do
+      echo 'Waiting for primary to connect...'
+      sleep 5s
+      done
+      echo 'Backup done, starting replica...'
+      chmod 0700 /var/lib/postgresql/data
+      docker-entrypoint.sh -c config_file=/etc/postgresql/postgresql.conf
+      "
+    depends_on:
+      - job_market_db_master
+    volumes:
+      - ./postgresql.conf:/etc/postgresql/postgresql.conf
+      - ./pg_hba.conf:/etc/pg_hba.conf
+    healthcheck:
+      test: 'pg_isready -U admin --dbname=JobMarketDB'
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - inner_network
+
+  job_market_notification:
+    container_name: job_market_notification
+    image: job_market_notification
+    ports:
+      - "8082:8082"
+    healthcheck:
+      test: "curl --fail --silent http://job_market_notification:8082/actuator/health | grep UP || echo 'fail'"
+      interval: 20s
+      timeout: 5s
+      retries: 3
+    depends_on:
+      job_market_db_fill:
+        condition: service_completed_successfully
+    env_file: 
+      - .env_mail
+      - .env
+    environment:
+      GATEWAY_HOSTNAME: https://api.jobistry.org
+    networks:
+      - inner_network
+
+  job_market_user_service:
+    container_name: job_market_user_service
+    image: job_market_user_service
+    ports:
+      - "8081:8081"
+    healthcheck:
+      test: "curl --fail --silent http://job_market_user_service:8081/actuator/health | grep UP || echo 'fail'"
+      interval: 20s
+      timeout: 5s
+      retries: 3
+    depends_on:
+      job_market_db_fill:
+        condition: service_completed_successfully
+    env_file: .env
+    environment:
+      JWT_SECRET: Z6inrE8WSUvFlclX7pxJDIpTUecebfj1BGkqhtayATlfMWVZcs0Na0W3Q0T6vQ4dmmaG6qyGC4UNiIZOQPd0daPhC2jUIQ81G8NLuxbD2VlWtHkMj34W00SyCLBLT6Tc
+      JWT_EXPIRATIONS_S: 12000
+      JWT_REFRESH_EXPIRATIONS_S: 12000
+      FRONTEND_URL: https://zpi.jobistry.org
+    networks:
+      - inner_network
+
+
+  job_market_db_fill:
+    container_name: job_market_db_fill
+    image: job_market_db_fill:latest
+    depends_on:
+      job_market_db_master:
+        condition: service_healthy
+    networks:
+      - inner_network
+
+  job_market_gateway:
+    container_name: job_market_gateway
+    image: job_market_gateway
+    # Change from expose to label-based routing
+    #ports:
+    #  - "8080:8080"
+    environment:
+      JWT_SECRET: Z6inrE8WSUvFlclX7pxJDIpTUecebfj1BGkqhtayATlfMWVZcs0Na0W3Q0T6vQ4dmmaG6qyGC4UNiIZOQPd0daPhC2jUIQ81G8NLuxbD2VlWtHkMj34W00SyCLBLT6Tc
+    networks:
+      - inner_network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.job_market_gateway.rule=Host(`api.jobistry.org`)"
+      - "traefik.http.routers.job_market_gateway.entrypoints=websecure"
+      - "traefik.http.routers.job_market_gateway.tls.certresolver=myresolver"
+      - "traefik.http.services.job_market_gateway.loadbalancer.server.port=8080"
+
+  job_market_chat:
+    container_name: job_market_chat
+    image: job_market_chat
+    environment:
+      DB_HOST: job_market_db_master
+    depends_on:
+      job_market_db_fill:
+        condition: service_completed_successfully
+    ports:
+      - "8088:8088"
+    networks:
+      - inner_network
+
+
+  job_market_job_service:
+    container_name: job_market_job_service
+    image: job_market_job_service
+    env_file: .env
+    environment:
+      USER_SERVICE_URL: http://172.22.0.1:8081
+    depends_on: 
+      job_market_db_fill:
+        condition: service_completed_successfully
+    ports:
+      - "8083:8083"
+    networks:
+      - inner_network
+
+
+  job_market_analytics:
+    container_name: job_market_analytics
+    image: job_market_analytics
+    env_file: .env
+    environment:
+      USER_SERVICE_URL: http://job_market_user_service:8081
+    depends_on: 
+      job_market_db_fill:
+        condition: service_completed_successfully
+    ports:
+      - "8089:8089"
+    networks:
+      - inner_network
+
+
+  job_market_front:
+    container_name: job_market_front
+    image: job_market_front
+    # Remove direct port mapping to enforce access via Traefik
+    #expose:
+    #  - "80"
+    networks:
+      - inner_network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.job_market_front.rule=Host(`zpi.jobistry.org`)" # Replace with your domain
+      - "traefik.http.routers.job_market_front.entrypoints=websecure"
+      - "traefik.http.routers.job_market_front.tls.certresolver=myresolver"
+      - "traefik.http.services.job_market_front.loadbalancer.server.port=3000"
+
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - inner_network
+
+networks:
+  inner_network:
+    name: inner_network
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.22.0.0/16
