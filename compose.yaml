@@ -1,21 +1,4 @@
 services:
-  # job_market_db:
-  #   container_name: job_market_database
-  #   image: job_market_database
-  #   ports:
-  #     - "5432:5432"
-  #   environment:
-  #     POSTGRES_DB: JobMarketDB
-  #     POSTGRES_USER: admin
-  #     POSTGRES_PASSWORD: test
-
-  #   healthcheck:
-  #     test: ["CMD", "pg_isready", "-U", "admin", "-d", "JobMarketDB"]
-  #     interval: 30s
-  #     timeout: 10s
-  #     retries: 3
-  #   networks:
-  #     - inner_network
 
   job_market_db_master:
     image: job_market_database_master
@@ -45,8 +28,6 @@ services:
      retries: 5
     networks:
      - inner_network
-
-
 
   job_market_db_replica:
     image: job_market_database
@@ -117,7 +98,7 @@ services:
         condition: service_completed_successfully
     env_file: .env
     environment:
-      JWT_SECRET: aL3InG9butMfdPhMbggtgKrTllDkrb4dCHGJqCeag7yOeRUIuo3tng7QXzNY2qLB5vdcE0NKtVDYmKOKsEM15LSmA5ZiJXJMKS7sBbwI70J2MMNerWOi9q6uanwb090S
+      JWT_SECRET: qiaDsPT4GncLYoij0zwCkvOeZIDeGKE0QlIT89SFFTyYH86xKYxWood25024CLBtHWMjnpXBuzFbO78VRA0kH1V8SR7fhAkIl8AfcnOEyEyG2vIkvmlT3muF0BCTlEju
       JWT_EXPIRATIONS_S: 12000
       JWT_REFRESH_EXPIRATIONS_S: 12000
 
@@ -139,7 +120,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      JWT_SECRET: aL3InG9butMfdPhMbggtgKrTllDkrb4dCHGJqCeag7yOeRUIuo3tng7QXzNY2qLB5vdcE0NKtVDYmKOKsEM15LSmA5ZiJXJMKS7sBbwI70J2MMNerWOi9q6uanwb090S
+      JWT_SECRET: qiaDsPT4GncLYoij0zwCkvOeZIDeGKE0QlIT89SFFTyYH86xKYxWood25024CLBtHWMjnpXBuzFbO78VRA0kH1V8SR7fhAkIl8AfcnOEyEyG2vIkvmlT3muF0BCTlEju
     networks:
       - inner_network
 
