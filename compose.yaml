@@ -18,7 +18,7 @@ services:
   #     - inner_network
 
   job_market_db_master:
-    image: job_market_database
+    image: job_market_database_master
     container_name: job_market_db_master
     restart: always
     ports:
@@ -61,7 +61,7 @@ services:
     command: |
       bash -c "
       pwd
-      until pg_basebackup --pgdata=/var/lib/postgresql/data -R --slot=replication_slot --host=172.24.0.1 --port=5432
+      until pg_basebackup --pgdata=/var/lib/postgresql/data -R --slot=replication_slot --host=172.22.0.1 --port=5432
       do
       echo 'Waiting for primary to connect...'
       sleep 5s
@@ -96,12 +96,9 @@ services:
     depends_on:
       job_market_db_fill:
         condition: service_completed_successfully
-    environment:
-      DATASOURCE_URL: jdbc:postgresql://172.22.0.1:5432/JobMarketDB
-      DATASOURCE_USERNAME: admin
-      DATASOURCE_PASSWORD: test
-      SPRING_MAIL_USERNAME: 259905@student.pwr.edu.pl
-      SPRING_MAIL_PASSWORD: 'qjuz bobg wbla cryx'
+    env_file: 
+     - .env_mail
+     - .env
     networks:
       - inner_network
 
@@ -120,10 +117,7 @@ services:
         condition: service_completed_successfully
     env_file: .env
     environment:
-      DATASOURCE_URL: jdbc:postgresql://172.22.0.1:5432/JobMarketDB
-      DATASOURCE_USERNAME: admin
-      DATASOURCE_PASSWORD: test
-      JWT_SECRET: q57kniynWuRaC2be8db7nmSMUjKpOZSazrmVAgqOBvUzbXKy6nHJZA1hF0SxbE4WAszB6ASP5dSc4g0eborbW7y2XSZb1Fks9FmCeLxf5KTdLQ487sSDbK4pIy8KW1AZ
+      JWT_SECRET: aL3InG9butMfdPhMbggtgKrTllDkrb4dCHGJqCeag7yOeRUIuo3tng7QXzNY2qLB5vdcE0NKtVDYmKOKsEM15LSmA5ZiJXJMKS7sBbwI70J2MMNerWOi9q6uanwb090S
       JWT_EXPIRATIONS_S: 12000
       JWT_REFRESH_EXPIRATIONS_S: 12000
 
@@ -145,14 +139,11 @@ services:
     ports:
       - "8080:8080"
     environment:
-      JWT_SECRET: q57kniynWuRaC2be8db7nmSMUjKpOZSazrmVAgqOBvUzbXKy6nHJZA1hF0SxbE4WAszB6ASP5dSc4g0eborbW7y2XSZb1Fks9FmCeLxf5KTdLQ487sSDbK4pIy8KW1AZ
-    # depends_on:
-    #   job_market_db:
-    #     condition: service_healthy
+      JWT_SECRET: aL3InG9butMfdPhMbggtgKrTllDkrb4dCHGJqCeag7yOeRUIuo3tng7QXzNY2qLB5vdcE0NKtVDYmKOKsEM15LSmA5ZiJXJMKS7sBbwI70J2MMNerWOi9q6uanwb090S
     networks:
       - inner_network
 
-  job_market_chat_service:
+  job_market_chat:
     container_name: job_market_chat
     image: job_market_chat
     environment:

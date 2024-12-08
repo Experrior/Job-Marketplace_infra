@@ -97,6 +97,7 @@ rebuild() {
 		echo $build_dir
 		echo $(pwd)
 		docker build -f db/Dockerfile . -t docker.local:5000/job_market_database -t job_market_database
+		docker build -f db/Dockerfile_master . -t docker.local:5000/job_market_database -t job_market_database_master
 		docker build -f user-service/Dockerfile . -t job_market_user_service
 		# docker build -f analytics/Dockerfile . -t job_market_analytics
 		docker build -f api-gateway/Dockerfile . -t job_market_gateway
