@@ -3,16 +3,14 @@ kind: Service
 metadata:
   name: user-service
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   selector:
     app: user
   ports:
     - protocol: TCP
       port: 8081
       targetPort: 8081
-      # nodePort: 30001
-  externalIPs:
-  - 10.96.0.6
+  clusterIP: 10.96.0.6
   
 ---
 apiVersion: networking.k8s.io/v1
