@@ -3,12 +3,49 @@ kind: Service
 metadata:
   name: postgres-slaves
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   selector:
     app: database_replica
   ports:
     - protocol: TCP
       port: 5432
       targetPort: 5432
-  externalIPs:
-  - 172.22.0.4
+  # externalIPs:
+  # - 172.22.0.4
+  clusterIP: 10.96.0.4
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: postgres-slaves
+# spec:
+#   selector:
+#     app.kubernetes.io/name: database_replica
+#   ports:
+#     - protocol: TCP
+#       port: 5432
+#       targetPort: 5432
+#   clusterIP: 171.22.0.2
+#   type: LoadBalancer
+# status:
+#   loadBalancer:
+#     ingress:
+#     - ip: 171.22.0.4
+
+
+
+
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: postgres-slaves
+#   labels:
+#     app: database_replica
+# spec:
+#   type: ClusterIP
+#   clusterIP: '171.22.0.4'
+#   selector:
+#     app: database_replica
+#   ports:
+#     - port: 5432
+#       targetPort: 5432
+#       protocol: TCP

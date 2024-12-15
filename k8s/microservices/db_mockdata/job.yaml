@@ -5,9 +5,17 @@ metadata:
 spec:
   template:
     spec:
+      volumes:
+        - name: mockdata
+          configMap:
+            name: mockdata
+            defaultMode: 0777
       containers:
       - name: job-market-db-fill
         image: job_market_db_fill:latest
+        volumeMounts:
+          - name: mockdata
+            mountPath: /mockdata/config
         # command: ["sh", "-c"]
         # args:
         #   - |
@@ -27,9 +35,6 @@ spec:
             cpu: "500m"  
 
         imagePullPolicy: IfNotPresent
-      # volumeMounts:
-      #   - name: mockdata
-      #     mountPath: mockdata.json
-      #     subPath: mockdata.json
+
   # backoffLimit: 4
-      restartPolicy: Never
+      restartPolicy: OnFailure

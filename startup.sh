@@ -53,32 +53,42 @@ run_linter() {
 }
 
 load_images() {
+
 	# load images if not present
 	# if ! ( minikube image ls -p="${profile}" | grep -q 'job_market_user_service' ); then
-		minikube image load job_market_user_service:latest -p="${profile}"
+		minikube image load --overwrite job_market_user_service:latest -p="${profile}"
 	# fi
 
 	# if ! ( minikube image ls -p="${profile}" | grep -q 'job_market_database' ); then
-		minikube image load job_market_database:latest -p="${profile}"
+		minikube image load --overwrite job_market_database:latest -p="${profile}"
+
+
+		minikube image load  --overwrite job_market_database_master:latest -p="${profile}"
 	# fi
 
 	# if ! ( minikube image ls -minikube startp="${profile}" | grep -q 'job_market_db_fill' ); then
-		minikube image load job_market_db_fill:latest -p="${profile}"
+		minikube image load --overwrite job_market_db_fill:latest -p="${profile}"
 	# fi
 
 	# if ! ( minikube image ls -p="${profile}" | grep -q 'job_market_job_service' ); then
-		minikube image load job_market_job_service:latest -p="${profile}"
+		minikube image load --overwrite job_market_job_service:latest -p="${profile}"
 	# fi
 
 	# if ! ( minikube image ls -p="${profile}" | grep -q 'job_market_chat' ); then
 	# minikube image rm job_market_chat:latest -p="${profile}"
-	minikube image load job_market_chat:latest -p="${profile}"
+	minikube image load --overwrite job_market_chat:latest -p="${profile}"
+
+
+	minikube image load --overwrite job_market_front:latest -p="${profile}"
+
+
+
+	minikube image load --overwrite job_market_gateway:latest -p="${profile}"
 	# fi
 
-	if ! ( kubectl config current-context | grep -qv "${profile}" ); then
-		kubectl config set-cluster "${profile}"
-		kubectl config set-context --current --namespace dev
-	fi
+	# if ! ( kubectl config current-context | grep -qv "${profile}" ); then
+
+	# fi
 }
 
 if $pkl; then
@@ -97,11 +107,11 @@ rebuild() {
 		echo $build_dir
 		echo $(pwd)
 		docker build -f db/Dockerfile . -t docker.local:5000/job_market_database -t job_market_database
-		docker build -f db/Dockerfile_master . -t docker.local:5000/job_market_database -t job_market_database_master
-		docker build -f user-service/Dockerfile . -t job_market_user_service
-		docker build -f analytics/Dockerfile . -t job_market_analytics
-		docker build -f api-gateway/Dockerfile . -t job_market_gateway
-		docker build -f notification-service/Dockerfile . -t job_market_notification
+		docker build -f db/Dockerfile_master . -t docker.local:5000/job_market_database_master -t job_market_database_master
+		docker build -f user-service/Dockerfile . -t job_market_user_service -t docker.local:5000/job_market_user_service
+		docker build -f analytics/Dockerfile . -t job_market_analytics -t docker.local:5000/job_market_analytics
+		docker build -f api-gateway/Dockerfile . -t job_market_gateway -t docker.local:5000/job_market_gateway
+		docker build -f notification-service/Dockerfile . -t job_market_notification -t docker.local:5000/job_market_notification
 		docker build -f db_mockup/Dockerfile . -t docker.local:5000/job_market_db_fill -t job_market_db_fill
 		docker build -f chat_go/Dockerfile . -t docker.local:5000/job_market_chat -t job_market_chat
 		docker build -f job-service/Dockerfile . -t docker.local:5000/job_market_job_service -t job_market_job_service
@@ -117,18 +127,24 @@ rebuild() {
 
 if $k8s || $k8s_full; then
 
-	if $k8s_full; then
-		# echo "what to do ?..."
-		kubectl delete -k ${INFRA_FOLDER}/k8s/clusters/"${profile}"/ || echo "--- [WARNING] Couldn't delete everything ---"
+
+    if $(minikube status | grep -q 'apiserver: Stopped'); then
+		minikube start -p="${profile}" --driver=docker --cpus 6 --memory 10000 --static-ip 192.168.10.10
 	fi
-	minikube start -p="${profile}" --driver=docker --cpus 6 --memory 10000 --static-ip 192.168.10.10
-	sleep 10s
+	if $k8s_full; then
+		kubectl delete -k ${INFRA_FOLDER}/k8s/clusters/"${profile}"/ || echo "--- [WARNING] Couldn't delete everything ---"
+		# workaorund, cause action just initiates deletion process
+		sleep 60s
+	fi
+
 
 	rebuild
-
-	load_images
-
-	kubectl delete --force -k ${INFRA_FOLDER}/k8s/clusters/"${profile}"/ || echo "--- [WARNING] Couldn't delete everything ---"
+	if $rebuild; then
+		load_images
+	fi
+	kubectl config set-cluster "${profile}"
+	kubectl config set-context --current --namespace dev
+	# kubectl delete --force -k ${INFRA_FOLDER}/k8s/clusters/"${profile}"/ || echo "--- [WARNING] Couldn't delete everything ---"
 	kubectl apply -k ${INFRA_FOLDER}/k8s/clusters/"${profile}"/
 
 		# minikube -p=${profile} tunnel --cleanup=true & echo 'Added minikube tunnel'

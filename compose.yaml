@@ -117,7 +117,7 @@ services:
         condition: service_completed_successfully
     env_file: .env
     environment:
-      JWT_SECRET: eFW11ZPwKm1dNaMI9kvPRXgg0z5kYhUo1QMwKMdkgpnhD3Xh7kKhZE0Lt0Zi6l09vLeCenhMwcnl7aOU88tuBxsah3mRgP14QQx3eFENPBTW4kteTpsPl5LVvvaGvEdI
+      JWT_SECRET: gYOeIZ8DX9MFsPjRJVPH4ErsReuQXn59QCk7abPCnm5Uru0DF4GU5eqk0JvviNOMiLhvsMh1eLRyhGSLp9exrzTi1fpggNDM8TEYlepSoZMi4r0tX4nKET3UCplwtNCP
       JWT_EXPIRATIONS_S: 12000
       JWT_REFRESH_EXPIRATIONS_S: 12000
 
@@ -139,7 +139,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      JWT_SECRET: eFW11ZPwKm1dNaMI9kvPRXgg0z5kYhUo1QMwKMdkgpnhD3Xh7kKhZE0Lt0Zi6l09vLeCenhMwcnl7aOU88tuBxsah3mRgP14QQx3eFENPBTW4kteTpsPl5LVvvaGvEdI
+      JWT_SECRET: gYOeIZ8DX9MFsPjRJVPH4ErsReuQXn59QCk7abPCnm5Uru0DF4GU5eqk0JvviNOMiLhvsMh1eLRyhGSLp9exrzTi1fpggNDM8TEYlepSoZMi4r0tX4nKET3UCplwtNCP
     networks:
       - inner_network
 

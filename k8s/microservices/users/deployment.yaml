@@ -18,21 +18,20 @@ spec:
           ports:
             - containerPort: 8081
               hostPort: 8081
+          envFrom:
+            - secretRef:
+                name: app-config
           env:
-            - name: JAVA_OPTS
-              value: "-Xms512m -Xmx1024m"
-            - name: DATASOURCE_URL
-              value: jdbc:postgresql://172.22.0.2:5432/jobMarketDB
-            - name: DATASOURCE_USERNAME
-              value: admin
-            - name: DATASOURCE_PASSWORD
-              value: test
+            - name: JWT_EXPIRATIONS_S
+              value: "12000"
+            - name: JWT_REFRESH_EXPIRATIONS_S
+              value: "12000"
           resources:
             requests:
               memory: "256Mi"
               cpu: "250m"
             limits:
               memory: "512Mi"
-              cpu: "500m"  
+              cpu: "300m"  
           imagePullPolicy: IfNotPresent
 

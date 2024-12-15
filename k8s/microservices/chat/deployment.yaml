@@ -19,8 +19,6 @@ spec:
             - containerPort: 8088
               hostPort: 8088
           env:
-            - name: JAVA_OPTS
-              value: "-Xms512m -Xmx1024m"
             - name: DATASOURCE_URL
               value: jdbc:postgresql://172.22.0.2:5432/JobMarketDB
             - name: DATASOURCE_USERNAME
@@ -33,6 +31,6 @@ spec:
               cpu: "250m"
             limits:
               memory: "512Mi"
-              cpu: "500m"  
+              cpu: "250m"  
           imagePullPolicy: IfNotPresent
 

@@ -12,15 +12,15 @@ spec:
     matchLabels:
       index: '2'
 
-  volumeClaimTemplates:
-    - metadata:
-        name: postgres-db-slave
-      spec:
-        accessModes: [ "ReadWriteOnce" ]
-        storageClassName: standard
-        resources:
-          requests:
-            storage: 1Gi
+  # volumeClaimTemplates:
+  #   - metadata:
+  #       name: postgres-db-slave
+  #     spec:
+  #       accessModes: [ "ReadWriteOnce" ]
+  #       storageClassName: standard
+  #       resources:
+  #         requests:
+  #           storage: 1Gi
 
   template:
     metadata:
@@ -30,6 +30,10 @@ spec:
 
     spec:
       terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsUser: 70
+        runAsGroup: 70
+        fsGroup: 70
       volumes:
         - name: config-volume-slave
           configMap:
@@ -38,38 +42,93 @@ spec:
             items:
             - key: copy_primary_data_to_replica.sh
               path: copy_primary_data_to_replica.sh
+            - key: db_init.sql
+              path: db_init.sql
+            - key: postgresql-slave.conf
+              path: postgresql-slave.conf
+            - key: pg_hba.conf
+              path: pg_hba.conf
+        - name: init-script
+          configMap:
+              name: postgres-init
+              defaultMode: 0755 
+      # initContainers:
+      #   - name: init-chown-data
+      #     image: job_market_database:latest
+      #     imagePullPolicy: IfNotPresent
+      #     volumeMounts:
+      #       # - name: postgres-db-slave
+      #       #   mountPath: /backup2
+      #       - name: init-script
+      #         mountPath: /init-scripts
+      #     command:
+      #       - sh
+      #       - -c
+      #       - "initdb -D backup3"    
+      #     securityContext:
+      #       capabilities:
+      #         add:
+      #           - CHOWN
+      #           - DAC_OVERRIDE  
+      #     resources:
+      #       requests:
+      #         memory: "512Mi"
+      #         cpu: "125m"
+      #       limits:
+      #         memory: "1024Mi"
+      #         cpu: "200m"  
     
       containers:
         - name: setup-replica-data-directory
-          image: postgres:latest
+          image: job_market_database:latest
           imagePullPolicy: IfNotPresent
-
+          # command:
+          #   - "postgres"
+          #   - "-c"
+          #   - "config_file=/etc/postgresql.conf"
+          #   - "-c"
+          #   - "hba_file=/etc/pg_hba.conf"
           env:
             - name: PRIMARY_HOST_NAME
-              value: 172.22.0.2
+              value: 10.96.0.2
             - name: PGPASSWORD
-            - name: PGDATA
-              value: /backup
-
-          command:
-            ["/bin/sh", "-c", "sleep 99999"]
-
+              value: test
+            # - name: PGDATA
+            #   value: /backup3
+            - name: POSTGRES_USER
+              value: admin
+            - name: POSTGRES_PASSWORD
+              value: test
+            - name: POSTGRES_DB
+              value:  JobMarketDB
           resources:
             requests:
               memory: "512Mi"
               cpu: "500m"
             limits:
               memory: "1024Mi"
-              cpu: "1000m"  
+              cpu: "750m"  
 
           volumeMounts:
-            - name: postgres-db-slave
-              mountPath: /etc/postgresql/data/
+            # - name: postgres-db-slave
+            #   mountPath: /backup2
 
             - name: config-volume-slave
-              mountPath: /tmp/copy_primary_data_to_replica.sh
-              subPath: copy_primary_data_to_replica.sh
+              mountPath: /etc/pg_hba.conf
+              subPath: pg_hba.conf
+
+            - name: config-volume-slave
+              mountPath: /etc/postgresql.conf
+              subPath: postgresql-slave.conf
+
+            # - name: config-volume-slave
+            #   mountPath: /tmp/copy_primary_data_to_replica.sh
+            #   subPath: copy_primary_data_to_replica.sh
               
+            - name: config-volume-slave
+              mountPath: /docker-entrypoint-initdb.d/db_init.sql
+              subPath: db_init.sql
+
       # containers:
 
       #   - name: database-slave

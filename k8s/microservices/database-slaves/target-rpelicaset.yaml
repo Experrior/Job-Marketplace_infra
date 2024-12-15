@@ -45,6 +45,7 @@ spec:
             - name: PRIMARY_HOST_NAME
               value: 172.22.0.2
             - name: PGPASSWORD
+              value: test
             - name: PGDATA
               value: /backup
 

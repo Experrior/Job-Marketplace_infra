@@ -6,8 +6,10 @@ resources:
   - database-slaves
   - jobs
   - users
-  # - db_mockdata
-  - chat
+  - gateway
+  - front
+  - db_mockdata
+  # - chat
   # - locust-master
   # - locust-workers
   - ../configmaps

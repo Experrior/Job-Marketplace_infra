@@ -9,6 +9,7 @@ configMapGenerator:
   - pg_hba.conf
   - postgresql-master.conf
   - primary_create_replication_role.sh
+  - logging.sql
 
 - name: postgres-slave
   namespace: dev
@@ -19,3 +20,11 @@ configMapGenerator:
   - postgresql-slave.conf
   - slave-startup.sh
   - copy_primary_data_to_replica.sh
+  - db_init.sql
+
+- name: postgres-init
+  namespace: dev
+  options:
+    disableNameSuffixHash: true
+  files:
+  - init_script.sh

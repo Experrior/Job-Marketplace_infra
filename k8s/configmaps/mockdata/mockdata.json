@@ -1,0 +1,204 @@
+{
+    "connection": "postgresql+psycopg2://admin:test@10.96.0.2:5432/JobMarketDB",
+    "tables": {
+      "app_users": {
+        "user_id": "PK UUID",
+        "company_id": "FK_UUID company.company_id",
+        "email": "email UNIQUE",
+        "first_name": "first_name",
+        "last_name": "last_name",
+        "role": "OPTION IN (recruiter,applicant)",
+        "phone": "first_name",
+        "is_blocked": "bool",
+        "is_enabled": "bool",
+        "verification_token": "first_name",
+        "is_email_verified": "bool CONST True",
+        "is_employee_verified": "bool",
+        "created_at": "timestamp RANGE(2023-01-01 00:00:00,2024-12-01 22:12:00)",
+        "updated_at": "timestamp RANGE(2023-01-01 00:00:00,2024-12-01 22:12:00)",
+        "password": "first_name"
+      },
+      "skills": {
+        "skill_id": "PK UUID",
+        "profile_id": "FK_UUID user_profiles.profile_id",
+        "skill_name": "first_name",
+        "proficiency_level": "first_name",
+        "updated_at": "timestamp RANGE(2023-01-01 00:00:00,2024-12-01 22:12:00)"
+      },
+      "chat_messages": {
+        "message_id": "PK UUID",
+        "chat_id": "FK_UUID chats.chat_id",
+        "content": "long_text",
+        "created_by": "FK_UUID app_users.user_id",
+        "created_at": "timestamp RANGE(2023-01-01 00:00:00,2024-12-01 22:12:00)",
+        "updated_at": "timestamp RANGE(2023-01-01 00:00:00,2024-12-01 22:12:00)"
+      },
+      "jobs": {
+        "job_id": "PK UUID",
+        "company_id": "FK_UUID company.company_id",
+        "job_title": "OPTION IN (Software Engineer,Data Scientist,DevOps Engineer,Cloud Architect,Full Stack Developer,Front-End Developer,Back-End Developer,Mobile Developer,UX Designer,UI Designer,Product Manager,Project Manager,IT Consultant,Cyber Security Analyst,Network Engineer,Database Administrator,Systems Analyst,Technical Writer,QA Tester,IT Support Specialist)",
+        "quiz_id": "FK_UUID quizzes.quiz_id",
+        "job_description": "long_text",
+        "recruiter_id": "FK_UUID app_users.user_id",
+        "required_skills": "jsonb:json1 value:required_skills",
+        "views": "integer RANGE(20,2000) DISTRIBUTION(normal,mean=1000,std=400)",
+        "required_experience": "integer RANGE(0,15)",
+        "category": "OPTION IN (WEB_DEVELOPMENT,MOBILE_DEVELOPMENT,GAME_DEVELOPMENT,EMBEDDED,ANALYTICS,MACHINE_LEARNING,CLOUD_COMPUTING,NETWORKS,CYBERSECURITY,ADMINISTRATION,ERP,CONSULTING,COMPILERS)",
+        "employment_type": "OPTION IN (FULL_TIME,PART_TIME,CONTRACT,INTERNSHIP,TEMPORARY,FREELANCE)",
+        "work_location": "OPTION IN (ONSITE,REMOTE,HYBRID)",
+        "experience_level": "OPTION IN (INTERN,JUNIOR,MID,SENIOR,LEAD,MANAGER,DIRECTOR,EXECUTIVE)",
+        "is_deleted": "bool CONST",
+        "location": "country+city(\"en_US\",\"en_GB\",\"fr_FR\",\"de_DE\",\"it_IT\",\"es_ES\",\"pl_PL\",\"nl_NL\",\"pt_PT\",\"sv_SE\",\"da_DK\",\"fi_FI\",\"no_NO\",\"cs_CZ\",\"hu_HU\",\"en_CA\",\"sk_SK\")",
+        "salary": "integer RANGE(4000,25000) DISTRIBUTION(normal,mean=7000,std=1500)",
+        "created_at": "timestamp RANGE(2023-01-01 00:00:00,2024-12-01 22:12:00)",
+        "updated_at": "timestamp RANGE(2023-01-01 00:00:00,2024-12-01 22:12:00)"
+      },
+      "experiences": {
+        "experience_id": "PK UUID",
+        "profile_id": "FK_UUID user_profiles.profile_id",
+        "company_name": "FK_UUID company.company_id",
+        "company_logo": "first_name",
+        "role": "OPTION IN (Software Engineer,Data Scientist,DevOps Engineer,Cloud Architect,Fullstack Developer,Frontend Developer,Backend Developer,Mobile Developer,UX Designer,UI Designer,Product Manager,Project Manager,IT Consultant,Cyber Security Analyst,Network Engineer,Database Administrator,Systems Analyst,Technical Writer,QA Tester,IT Support Specialist)",
+        "start_date": "timestamp RANGE(2023-01-01 00:00:00,2024-12-01 22:12:00)",
+        "end_date": "timestamp RANGE(2023-01-01 00:00:00,2024-12-01 22:12:00)",
+        "updated_at": "timestamp RANGE(2023-01-01 00:00:00,2024-12-01 22:12:00)"
+      },
+      "applications": {
+        "application_id": "PK UUID",
+        "status": "smallint RANGE(1,6)",
+        "job_id": "FK_UUID jobs.job_id",
+        "user_id": "FK_UUID app_users.user_id",
+        "quiz_result_id": "first_name",
+        "s3_resume_path": "first_name",
+        "created_at": "timestamp RANGE(2023-01-01 00:00:00,2024-12-01 22:12:00)",
+        "updated_at": "timestamp RANGE(2023-01-01 00:00:00,2024-12-01 22:12:00)"
+      },
+      "quizzes": {
+        "quiz_id": "PK UUID",
+        "created_at": "timestamp RANGE(2023-01-01 00:00:00,2024-12-01 22:12:00)",
+        "updated_at": "timestamp RANGE(2023-01-01 00:00:00,2024-12-01 22:12:00)",
+        "is_deleted": "bool",
+        "quiz_url": "first_name",
+        "s3_quiz_path": "first_name",
+        "recruiter_id": "FK_UUID app_users.user_id"
+      },
+      "educations": {
+        "education_id": "PK UUID",
+        "profile_id": "first_name",
+        "institution_name": "first_name",
+        "degree": "OPTION IN (BACHELOR,MASTER,PHD,MBA,OTHER)",
+        "start_date": "timestamp RANGE(2023-01-01 00:00:00,2024-12-01 22:12:00)",
+        "end_date": "timestamp RANGE(2023-01-01 00:00:00,2024-12-01 22:12:00)",
+        "updated_at": "timestamp RANGE(2023-01-01 00:00:00,2024-12-01 22:12:00)"
+      },
+      "company": {
+        "company_id": "PK UUID",
+        "name": "OPTION IN (Google,Microsoft,Apple,Amazon,Meta,Tesla,Netflix,Nvidia,Intel,IBM,Oracle,Cisco,Adobe,Salesforce,VMware,Qualcomm,AMD,Twitter,Uber,Airbnb,Alphabet,Microsoft Azure,Amazon Web Services,Meta,Facebook,Instagram,WhatsApp,TSMC,Samsung Electronics,Broadcom,Micron Technology,SAP,Oracle Corporation,Adobe Systems,Autodesk,Atlassian,ServiceNow,MongoDB,Cloudflare,Dell Technologies,HP Inc.,Lenovo,Acer,Verizon Communications,AT&T,T-Mobile US,China Mobile,China Telecom,China Unicom,Alibaba Group,JD.com,Shopify,eBay,Toyota Motor Corporation,Volkswagen Group,Hyundai Motor Group,Ford Motor Company,General Motors,Visa,Mastercard,PayPal,Stripe,Sony Interactive Entertainment,Microsoft Gaming,Nintendo,Tencent Games,Riot Games,Palo Alto Networks,Fortinet,Check Point Software Technologies,CrowdStrike)",
+        "email": "email CONST 259905@student.pwr.edu.pl",
+        "logo_path": "first_name",
+        "location": "country+city(\"en_US\",\"en_GB\",\"fr_FR\",\"de_DE\",\"it_IT\",\"es_ES\",\"pl_PL\",\"nl_NL\",\"pt_PT\",\"sv_SE\",\"da_DK\",\"fi_FI\",\"no_NO\",\"cs_CZ\",\"hu_HU\",\"en_CA\",\"sk_SK\")",
+        "industry": "OPTION IN (IT,Retail,Finance,Marketing,Manufacturing,Travel,Beauty,Healthcare,Government,Education,Law,Transport)",
+        "description": "first_name",
+        "s3_logo_path": "first_name",
+        "logourl": "first_name",
+        "logo_url": "first_name",
+        "is_email_verified": "bool CONST True",
+        "created_at": "timestamp RANGE(2023-01-01 00:00:00,2024-12-01 22:12:00)",
+        "updated_at": "timestamp RANGE(2023-01-01 00:00:00,2024-12-01 22:12:00)"
+      },
+      "chats": {
+        "chat_id": "PK UUID",
+        "recruiter_id": "first_name",
+        "applicant_id": "first_name",
+        "recruiter_name": "first_name",
+        "applicant_name": "first_name",
+        "is_deleted": "bool CONST False",
+        "created_at": "timestamp RANGE(2023-01-01 00:00:00,2024-12-01 22:12:00)",
+        "updated_at": "timestamp RANGE(2023-01-01 00:00:00,2024-12-01 22:12:00)"
+      },
+      "IntermediaryTable: user_chats":{
+        "user_id": "FK_UUID app_users.user_id",
+        "chat_id": "FK_UUID chats.chat_id"
+      },
+      "user_profiles": {
+        "profile_id": "PK UUID",
+        "user_id": "FK_UUID app_users.user_id",
+        "resume_path": "first_name",
+        "profile_picture_path": "first_name",
+        "s3_picture_path": "first_name",
+        "updated_at": "timestamp RANGE(2023-01-01 00:00:00,2024-12-01 22:12:00)",
+        "created_at":"timestamp RANGE(2023-01-01 00:00:00,2024-12-01 22:12:00)"
+      },
+      "user_settings": {
+        "settings_id": "PK UUID",
+        "user_id": "FK_UUID app_users.user_id",
+        "offers_notification": "bool",
+        "newsletter_notification": "bool",
+        "recruiter_messages": "bool",
+        "push_notification": "bool",
+        "updated_at": "timestamp RANGE(2023-01-01 00:00:00,2024-12-01 22:12:00)"
+      },
+      "IntermediaryTable: followed_jobs": {
+        "user_id": "FK_UUID app_users.user_id",
+        "job_id": "FK_UUID jobs.job_id",
+        "created_at": "timestamp RANGE(2023-01-01 00:00:00,2024-12-01 22:12:00)"
+      },
+      "verification_tokens": {
+        "token_id": "PK UUID",
+        "token": "first_name",
+        "user_id": "FK_UUID app_users.user_id",
+        "company_id": "FK_UUID company.company_id",
+        "expiry_date": "timestamp RANGE(2023-01-01 00:00:00,2024-12-01 22:12:00)"
+      },
+      "IntermediaryTable: viewed_jobs": {
+        "user_id": "FK_UUID app_users.user_id",
+        "job_id": "FK_UUID jobs.job_id"
+      }
+    },
+    "json_schemas": [
+      {
+        "json1": {
+          "fields": [
+            {
+              "required_skills": {
+                 "type": "array",
+                 "item_count": "RANGE(1, 5)",
+                 "content": {
+                    "type": "object",
+                    "fields": {
+                      "name": {
+                        "type": "string",
+                        "options": ["Python", "JavaScript", "Java", "C++", "Go", "Ruby"]
+                      },
+                      "level": {
+                        "type": "integer",
+                        "range": [1, 5]
+                      }
+                    }
+                 }
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "objects_count": {
+      "app_users": 1,
+      "skills": 1,
+      "chat_messages": 1,
+      "jobs": 5,
+      "experiences": 1,
+      "educations": 1,
+      "company": 1,
+      "chats": 1,
+      "user_profiles": 1,
+      "user_settings": 1,
+      "user_chats": 1,
+      "quizzes": 1,
+      "quiz_results": 1,
+      "applications": 1,
+      "followed_jobs": 1,
+      "viewed_jobs": 1,
+      "verification_tokens": 1
+    }
+  }

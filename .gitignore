@@ -39,3 +39,4 @@ terraform.rc
 
 #env files
 .env
+.env*

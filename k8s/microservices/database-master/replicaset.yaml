@@ -20,7 +20,7 @@ spec:
         storageClassName: standard
         resources:
           requests:
-            storage: 1Gi
+            storage: 5Gi
 
   template:
     metadata:
@@ -30,49 +30,123 @@ spec:
 
     spec:
       terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsUser: 70
+        runAsGroup: 70
+        fsGroup: 70
+
       volumes:
         - name: config-volume
           configMap:
             name: postgres-master
-            defaultMode: 0777
+
+        - name: init-script
+          configMap:
+              name: postgres-init
+              defaultMode: 0755 
+      # initContainers:
+      #   - name: init-chown-data
+      #     image: busybox
+      #     command: ["sh", "-c", "mkdir -p /var/lib/postgresql/data && chown -R 70:70 /var/lib/postgresql/data && chmod 0700 /var/lib/postgresql/data"]
+      #     securityContext:
+      #       runAsUser: 0
+      #       runAsGroup: 0
+      #       capabilities:
+      #         add:
+      #           - CHOWN
+      #     resources:
+      #       requests:
+      #         memory: "512Mi"
+      #         cpu: "125m"
+      #       limits:
+      #         memory: "1024Mi"
+      #         cpu: "200m"  
+          # volumeMounts:
+          #   - name: postgres-db-master
+          #     mountPath: /backup
+      # initContainers:
+      #   - name: init-chown-data
+      #     image: job_market_database:latest
+      #     imagePullPolicy: IfNotPresent
+      #     volumeMounts:
+      #       # - name: postgres-db-master
+      #       #   mountPath: /backup2
+      #       - name: init-script
+      #         mountPath: /init-scripts
+      #     command:
+      #       - sh
+      #       - -c
+      #       - "initdb -D /backup3"    
+      #     securityContext:
+      #       capabilities:
+      #         add:
+      #           - CHOWN
+      #           - DAC_OVERRIDE  
+      #     resources:
+      #       requests:
+      #         memory: "512Mi"
+      #         cpu: "125m"
+      #       limits:
+      #         memory: "1024Mi"
+      #         cpu: "200m"  
 
       containers:
 
         - name: database-master
-          image: job_market_database:latest
-          imagePullPolicy: Never
+          image: job_market_database_master:latest
+          imagePullPolicy: IfNotPresent
+          # command:
+          #   - "postgres"
+          #   - "-c"
+          #   - "config_file=/etc/postgresql.conf"
+          #   - "-c"
+          #   - "hba_file=/etc/pg_hba.conf"
           ports:
             - containerPort: 5432
-          args: ["-c", "config_file=/etc/postgresql.conf", "-c", "hba_file=/etc/pg_hba.conf"]
-
           livenessProbe:
               exec:
                 command:
-                  - sh
-                  - -c
-                  - exec pg_isready -U postgres
+                  - pg_isready
+                  - "-U"
+                  - admin
+                  - "--dbname=JobMarketDB"
               failureThreshold: 10
               initialDelaySeconds: 60
               periodSeconds: 20
               successThreshold: 1
               timeoutSeconds: 15
-
+          command:
+            - "postgres"
+            - "-c"
+            - "config_file=/etc/postgresql.conf"
+            - "-c"
+            - "hba_file=/etc/pg_hba.conf"
           env:
             - name: POSTGRES_DB
               value: JobMarketDB
             - name: POSTGRES_USER
               value: admin
+            # - name: PGDATA
+            #   value: /backup3
             - name: POSTGRES_PASSWORD
               value: test
+            - name: POSTGRES_HOST_AUTH_METHOD
+              value: "scram-sha-256\nhost all all 0.0.0.0/0 md5"
+            - name: POSTGRES_INITDB_ARGS
+              value: "--auth-host=scram-sha-256"
+
           resources:
             requests:
               memory: "512Mi"
               cpu: "500m"
             limits:
               memory: "1024Mi"
-              cpu: "1000m"  
+              cpu: "750m"  
 
           volumeMounts:
+            - name: postgres-db-master
+              mountPath: /var/lib/postgresql/data 
+
             - name: config-volume
               mountPath: /etc/pg_hba.conf
               subPath: pg_hba.conf
@@ -82,5 +156,5 @@ spec:
               subPath: postgresql-master.conf
 
             - name: config-volume
-              mountPath: /docker-entrypoint-initdb.d/primary_create_replication_role.sh
-              subPath: primary_create_replication_role.sh
+              mountPath: /docker-entrypoint-initdb.d/logging.sql
+              subPath: logging.sql
