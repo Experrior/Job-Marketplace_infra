@@ -81,7 +81,13 @@ spec:
             periodSeconds: 10
             successThreshold: 1
             timeoutSeconds: 3
-
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "1024Mi"
+              cpu: "750m"  
           volumeMounts:
             - name: postgres-db
               mountPath: toBeReplaced

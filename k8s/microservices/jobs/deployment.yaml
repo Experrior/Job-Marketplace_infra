@@ -23,13 +23,13 @@ spec:
                 name: app-config
           env:
             - name: USER_SERVICE_URL
-              value: http://172.22.0.8:8081
+              value: http://10.96.0.6:8081
           resources:
             requests:
               memory: "256Mi"
               cpu: "250m"
             limits:
-              memory: "512Mi"
-              cpu: "500m"  
+              memory: "800Mi"
+              cpu: "400m"  
           imagePullPolicy: IfNotPresent
 

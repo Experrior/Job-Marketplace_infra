@@ -150,8 +150,8 @@ if $k8s || $k8s_full; then
 		# minikube -p=${profile} tunnel --cleanup=true & echo 'Added minikube tunnel'
 	minikube -p=${profile} addons enable ingress
 	minikube -p=${profile} addons enable metrics-server
-	minikube -p=${profile} addons enable volumesnapshots
-	minikube -p=${profile} addons enable csi-hostpath-driver
+	# minikube -p=${profile} addons enable volumesnapshots
+	# minikube -p=${profile} addons enable csi-hostpath-driver
 
 	# restart deplyoments to allow for configmaps update
 	kubectl rollout restart deployment

@@ -30,10 +30,7 @@ spec:
 
     spec:
       terminationGracePeriodSeconds: 30
-      securityContext:
-        runAsUser: 70
-        runAsGroup: 70
-        fsGroup: 70
+
       volumes:
         - name: config-volume-slave
           configMap:
@@ -48,6 +45,10 @@ spec:
               path: postgresql-slave.conf
             - key: pg_hba.conf
               path: pg_hba.conf
+            - key: logging.sql
+              path: logging.sql
+            - key: init.sh
+              path: init.sh
         - name: init-script
           configMap:
               name: postgres-init
@@ -80,27 +81,31 @@ spec:
     
       containers:
         - name: setup-replica-data-directory
-          image: job_market_database:latest
+          image: postgres:latest
           imagePullPolicy: IfNotPresent
-          # command:
-          #   - "postgres"
-          #   - "-c"
-          #   - "config_file=/etc/postgresql.conf"
-          #   - "-c"
-          #   - "hba_file=/etc/pg_hba.conf"
+          # securityContext:
+          #     runAsUser: 0
+          #     runAsGroup: 0
+          #     capabilities:
+          #       add:
+          #       - CHOWN
+          #       - DAC_OVERRIDE 
+          command: ["/bin/sh", "/init.sh"]
+                        
           env:
             - name: PRIMARY_HOST_NAME
               value: 10.96.0.2
             - name: PGPASSWORD
-              value: test
-            # - name: PGDATA
-            #   value: /backup3
+              value: replicator_password
+            - name: PGUSER
+              value: replicator
             - name: POSTGRES_USER
               value: admin
             - name: POSTGRES_PASSWORD
               value: test
             - name: POSTGRES_DB
               value:  JobMarketDB
+
           resources:
             requests:
               memory: "512Mi"
@@ -117,18 +122,26 @@ spec:
               mountPath: /etc/pg_hba.conf
               subPath: pg_hba.conf
 
+
+            - name: config-volume-slave
+              mountPath: /docker-entrypoint-initdb.d/logging.sql
+              subPath: logging.sql
+
             - name: config-volume-slave
               mountPath: /etc/postgresql.conf
               subPath: postgresql-slave.conf
 
-            # - name: config-volume-slave
-            #   mountPath: /tmp/copy_primary_data_to_replica.sh
-            #   subPath: copy_primary_data_to_replica.sh
+            - name: config-volume-slave
+              mountPath: /tmp/copy_primary_data_to_replica.sh
+              subPath: copy_primary_data_to_replica.sh
               
             - name: config-volume-slave
               mountPath: /docker-entrypoint-initdb.d/db_init.sql
               subPath: db_init.sql
 
+            - name: config-volume-slave
+              mountPath: /init.sh
+              subPath: init.sh
       # containers:
 
       #   - name: database-slave

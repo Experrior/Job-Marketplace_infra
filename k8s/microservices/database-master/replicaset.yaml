@@ -12,15 +12,15 @@ spec:
     matchLabels:
       index: '1'
 
-  volumeClaimTemplates:
-    - metadata:
-        name: postgres-db-master
-      spec:
-        accessModes: [ "ReadWriteOnce" ]
-        storageClassName: standard
-        resources:
-          requests:
-            storage: 5Gi
+  # volumeClaimTemplates:
+  #   - metadata:
+  #       name: postgres-db-master
+  #     spec:
+  #       accessModes: [ "ReadWriteOnce" ]
+  #       storageClassName: standard
+  #       resources:
+  #         requests:
+  #           storage: 5Gi
 
   template:
     metadata:
@@ -30,20 +30,21 @@ spec:
 
     spec:
       terminationGracePeriodSeconds: 30
-      securityContext:
-        runAsUser: 70
-        runAsGroup: 70
-        fsGroup: 70
-
+      # securityContext:
+      #   runAsUser: 70
+      #   runAsGroup: 70
+      #   fsGroup: 70
+      # securityContext:
+      #   runAsUser: 0
       volumes:
         - name: config-volume
           configMap:
             name: postgres-master
-
-        - name: init-script
-          configMap:
-              name: postgres-init
-              defaultMode: 0755 
+            defaultMode: 0777
+        # - name: init-script
+        #   configMap:
+        #       name: postgres-init
+        #       defaultMode: 0755 
       # initContainers:
       #   - name: init-chown-data
       #     image: busybox
@@ -93,14 +94,8 @@ spec:
       containers:
 
         - name: database-master
-          image: job_market_database_master:latest
+          image: postgres:latest
           imagePullPolicy: IfNotPresent
-          # command:
-          #   - "postgres"
-          #   - "-c"
-          #   - "config_file=/etc/postgresql.conf"
-          #   - "-c"
-          #   - "hba_file=/etc/pg_hba.conf"
           ports:
             - containerPort: 5432
           livenessProbe:
@@ -115,12 +110,11 @@ spec:
               periodSeconds: 20
               successThreshold: 1
               timeoutSeconds: 15
-          command:
-            - "postgres"
-            - "-c"
-            - "config_file=/etc/postgresql.conf"
-            - "-c"
-            - "hba_file=/etc/pg_hba.conf"
+          command: ["/bin/sh", "-c"]
+          args:
+            - >
+              docker-entrypoint.sh -c config_file=/etc/postgresql.conf
+              -c hba_file=/etc/pg_hba.conf || echo error && sleep 999999
           env:
             - name: POSTGRES_DB
               value: JobMarketDB
@@ -144,8 +138,8 @@ spec:
               cpu: "750m"  
 
           volumeMounts:
-            - name: postgres-db-master
-              mountPath: /var/lib/postgresql/data 
+            # - name: postgres-db-master
+            #   mountPath: /var/lib/postgresql/data 
 
             - name: config-volume
               mountPath: /etc/pg_hba.conf
@@ -154,6 +148,10 @@ spec:
             - name: config-volume
               mountPath: /etc/postgresql.conf
               subPath: postgresql-master.conf
+
+            - name: config-volume
+              mountPath: /docker-entrypoint-initdb.d/master_init.sql
+              subPath: master_init.sql
 
             - name: config-volume
               mountPath: /docker-entrypoint-initdb.d/logging.sql

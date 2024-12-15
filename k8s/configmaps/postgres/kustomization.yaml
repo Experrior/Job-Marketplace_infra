@@ -10,6 +10,7 @@ configMapGenerator:
   - postgresql-master.conf
   - primary_create_replication_role.sh
   - logging.sql
+  - master_init.sql
 
 - name: postgres-slave
   namespace: dev
@@ -21,6 +22,8 @@ configMapGenerator:
   - slave-startup.sh
   - copy_primary_data_to_replica.sh
   - db_init.sql
+  - logging.sql
+  - init.sh
 
 - name: postgres-init
   namespace: dev
