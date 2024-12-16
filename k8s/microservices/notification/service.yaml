@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: notification-service
+spec:
+  type: ClusterIP
+  selector:
+    app: notification
+  ports:
+    - protocol: TCP
+      port: 8082
+      targetPort: 8082
+  clusterIP: 10.96.0.8
+  
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: notification-ingress
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /notification
+            pathType: Prefix
+            backend:
+              service:
+                name: notification-service
+                port:
+                  number: 8082

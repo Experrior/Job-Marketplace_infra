@@ -161,18 +161,20 @@ if $k8s || $k8s_full; then
 	
 
 else
+	rebuild
 	if $soft_rebuild; then
 		docker rm -f job_market_user_service
 		docker rm -f job_market_job_service
 		docker rm -f job_market_notification
 		docker rm -f job_market_chat
+		docker rm -f job_market_analytics
 
 		docker compose up -d job_market_user_service
 		docker compose up -d job_market_job_service
 		docker compose up -d job_market_notification
 		docker compose up -d job_market_chat
+		docker compose up -d job_market_analytics
 	elif $rebuild; then
-		rebuild
 		./scripts/generate_jwt.sh
 	fi
 	

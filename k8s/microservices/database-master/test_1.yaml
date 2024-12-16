@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  labels:
+    app: postgres
+spec:
+  serviceName: "postgres"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-master
+  template:
+    metadata:
+      labels:
+        app: postgres-master
+    spec:
+      volumes:
+        - name: config-volume
+          configMap:
+            name: postgres-master
+      containers:
+        - name: postgres
+          image: postgres:17
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: JobMarketDB
+            - name: POSTGRES_USER
+              value: admin
+            - name: POSTGRES_PASSWORD
+              value: test
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "1024Mi"
+              cpu: "750m"  
+
+          volumeMounts:
+            # - name: postgres-db-master
+            #   mountPath: /var/lib/postgresql/data 
+
+            - name: config-volume
+              mountPath: /etc/postgresql/pg_hba.conf
+              subPath: pg_hba.conf
+
+            - name: config-volume
+              mountPath: /etc/postgresql/postgresql.conf
+              subPath: postgresql-master.conf
+
+            - name: config-volume
+              mountPath: /docker-entrypoint-initdb.d/logging.sql
+              subPath: logging.sql
